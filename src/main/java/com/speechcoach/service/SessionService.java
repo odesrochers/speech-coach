@@ -113,9 +113,9 @@ public class SessionService {
                 You are a communication coach. Analyze this session and respond in exactly this format:
                 [Brief feedback on this session]
                 ---
-                [One pattern you observe based on recent context]
+                [One pattern you identified in this session that could be improved, and how to improve it]
                 ---
-                [A copyable summary for deeper conversation]
+                [A self-contained conversation opener I can paste into a new AI chat with no prior context. Write it in first person, describing what happened in this session, the skill I practiced and how it went, and asking for specific coaching advice on that. Do not infer patterns beyond what this single session shows.]
 
                 Session type: %s
                 Date: %s
@@ -123,11 +123,12 @@ public class SessionService {
                 Notes: %s
                 Skills practiced:
                 %s
-                """.formatted(
-                request.getType(),
-                request.getDate(),
-                request.getSuccessRating(),
-                request.getNotes(),
-                skillsText.toString());
+                """
+                .formatted(
+                        request.getType(),
+                        request.getDate(),
+                        request.getSuccessRating(),
+                        request.getNotes(),
+                        skillsText.toString());
     }
 }
