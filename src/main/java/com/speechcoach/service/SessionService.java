@@ -106,6 +106,7 @@ public class SessionService {
             Skill skill = skillRepository.findById(entry.getSkillId())
                     .orElseThrow(() -> new RuntimeException("Skill not found"));
             skillsText.append("- ").append(skill.getName())
+                    .append(" (").append(skill.getDescription()).append(")")
                     .append(": ").append(entry.getResult()).append("\n");
         }
 

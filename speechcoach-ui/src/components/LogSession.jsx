@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function LogSession({ onSessionLogged }) {
   const [type, setType] = useState("CALL");
@@ -6,19 +6,45 @@ function LogSession({ onSessionLogged }) {
   const [successRating, setSuccessRating] = useState(3);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [skills, setSkills] = useState([]);
+  const [skillSelections, setSkillSelections] = useState({});
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/skills")
+      .then((res) => res.json())
+      .then((data) => setSkills(data));
+  }, []);
+
+  function cycleSkill(skillId) {
+    setSkillSelections((prev) => {
+      const current = prev[skillId];
+      if (!current) return { ...prev, [skillId]: "USED_WELL" };
+      if (current === "USED_WELL") return { ...prev, [skillId]: "STRUGGLED" };
+      const next = { ...prev };
+      delete next[skillId];
+      return next;
+    });
+  }
+
+  function getSkillLabel(skillId) {
+    const state = skillSelections[skillId];
+    if (!state) return null;
+    return state === "USED_WELL" ? "✓" : "✗";
+  }
 
   async function handleSubmit() {
     setLoading(true);
+    const skillResults = Object.entries(skillSelections).map(
+      ([skillId, result]) => ({
+        skillId: Number(skillId),
+        result,
+      }),
+    );
+
     const response = await fetch("http://localhost:8080/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type,
-        date,
-        successRating,
-        notes,
-        skillResults: [],
-      }),
+      body: JSON.stringify({ type, date, successRating, notes, skillResults }),
     });
     const data = await response.json();
     setLoading(false);
@@ -69,6 +95,21 @@ function LogSession({ onSessionLogged }) {
           onChange={(e) => setNotes(e.target.value)}
           rows="4"
         />
+      </div>
+
+      <div>
+        <label>Skills</label>
+        <div>
+          {skills.map((skill) => (
+            <button
+              key={skill.id}
+              onClick={() => cycleSkill(skill.id)}
+              style={{ margin: "4px" }}
+            >
+              {skill.name} {getSkillLabel(skill.id)}
+            </button>
+          ))}
+        </div>
       </div>
 
       <button onClick={handleSubmit} disabled={loading}>
