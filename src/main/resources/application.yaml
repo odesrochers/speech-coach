@@ -2,10 +2,8 @@ spring:
   application:
     name: speechcoach
   datasource:
-    url: jdbc:postgresql://localhost:5432/speechcoach
+    url: ${DATABASE_URL}
     driver-class-name: org.postgresql.Driver
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
