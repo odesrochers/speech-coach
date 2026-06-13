@@ -49,7 +49,9 @@ public class SessionService {
                 request.getType(),
                 request.getDate(),
                 request.getSuccessRating(),
-                request.getNotes());
+                request.getNotes(),
+                request.getMyIntention(),
+                request.getInterlocutorState());
         session.setAiFeedback(aiFeedback);
         session.setAiPattern(aiPattern);
         session.setAiSummary(aiSummary);
@@ -85,6 +87,8 @@ public class SessionService {
         response.setAiPattern(aiPattern);
         response.setAiSummary(aiSummary);
         response.setSkillResults(skillResultEntries);
+        response.setMyIntention(session.getMyIntention());
+        response.setInterlocutorState(session.getInterlocutorState());
 
         return response;
     }
@@ -109,6 +113,12 @@ public class SessionService {
                     .append(" (").append(skill.getDescription()).append(")")
                     .append(": ").append(entry.getResult()).append("\n");
         }
+        String intentionLine = request.getMyIntention() != null
+                ? "My intention: " + request.getMyIntention() + "\n"
+                : "";
+        String interlocutorLine = request.getInterlocutorState() != null
+                ? "Interlocutor's state: " + request.getInterlocutorState() + "\n"
+                : "";
 
         return """
                 You are a communication coach. Analyze this session and respond in exactly this format:
@@ -122,7 +132,7 @@ public class SessionService {
                 Date: %s
                 Success rating: %s/5
                 Notes: %s
-                Skills practiced:
+                %s%sSkills practiced:
                 %s
                 """
                 .formatted(
@@ -130,6 +140,8 @@ public class SessionService {
                         request.getDate(),
                         request.getSuccessRating(),
                         request.getNotes(),
+                        intentionLine,
+                        interlocutorLine,
                         skillsText.toString());
     }
 }

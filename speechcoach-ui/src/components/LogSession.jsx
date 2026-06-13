@@ -8,6 +8,32 @@ function LogSession({ onSessionLogged }) {
   const [loading, setLoading] = useState(false);
   const [skills, setSkills] = useState([]);
   const [skillSelections, setSkillSelections] = useState({});
+  const [myIntention, setMyIntention] = useState(null);
+  const [interlocutorState, setInterlocutorState] = useState(null);
+  const intentionOptions = [
+    "INFORM",
+    "CLARIFY",
+    "PERSUADE",
+    "DECIDE",
+    "PLAN",
+    "NEGOTIATE",
+    "CONNECT",
+    "LEARN",
+    "SET_BOUNDARY",
+  ];
+  const stateOptions = [
+    "VENTING",
+    "SOLUTION_SEEKING",
+    "DEFENSIVE",
+    "ANXIOUS",
+    "DISTRACTED",
+    "CRITICAL",
+    "RUSHED",
+    "ENGAGED",
+    "OVERWHELMED",
+    "CONFUSED",
+    "UNINTERESTED",
+  ];
 
   useEffect(() => {
     fetch("http://localhost:8080/api/skills")
@@ -32,6 +58,10 @@ function LogSession({ onSessionLogged }) {
     return state === "USED_WELL" ? "✓" : "✗";
   }
 
+  function toggleSelection(value, current, setter) {
+    setter(current === value ? null : value);
+  }
+
   async function handleSubmit() {
     setLoading(true);
     const skillResults = Object.entries(skillSelections).map(
@@ -44,10 +74,19 @@ function LogSession({ onSessionLogged }) {
     const response = await fetch("http://localhost:8080/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, date, successRating, notes, skillResults }),
+      body: JSON.stringify({
+        type,
+        date,
+        successRating,
+        notes,
+        skillResults,
+        myIntention,
+        interlocutorState,
+      }),
     });
     const data = await response.json();
     setLoading(false);
+    console.log(data);
     onSessionLogged(data);
   }
 
@@ -107,6 +146,46 @@ function LogSession({ onSessionLogged }) {
               style={{ margin: "4px" }}
             >
               {skill.name} {getSkillLabel(skill.id)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label>My Intention</label>
+        <div>
+          {intentionOptions.map((option) => (
+            <button
+              key={option}
+              onClick={() =>
+                toggleSelection(option, myIntention, setMyIntention)
+              }
+              style={{
+                margin: "4px",
+                fontWeight: myIntention === option ? "bold" : "normal",
+              }}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label>Interlocutor State</label>
+        <div>
+          {stateOptions.map((option) => (
+            <button
+              key={option}
+              onClick={() =>
+                toggleSelection(option, interlocutorState, setInterlocutorState)
+              }
+              style={{
+                margin: "4px",
+                fontWeight: interlocutorState === option ? "bold" : "normal",
+              }}
+            >
+              {option}
             </button>
           ))}
         </div>

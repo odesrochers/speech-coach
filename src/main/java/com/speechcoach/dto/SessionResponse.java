@@ -1,5 +1,7 @@
 package com.speechcoach.dto;
 
+import com.speechcoach.domain.InterlocutorState;
+import com.speechcoach.domain.MyIntention;
 import com.speechcoach.domain.SessionType;
 import com.speechcoach.domain.SkillResult;
 import java.time.LocalDate;
@@ -16,6 +18,8 @@ public class SessionResponse {
     private String aiPattern;
     private String aiSummary;
     private List<SkillResultEntry> skillResults;
+    private MyIntention myIntention;
+    private InterlocutorState interlocutorState;
 
     public static class SkillResultEntry {
         private Long skillId;
@@ -117,5 +121,21 @@ public class SessionResponse {
 
     public void setSkillResults(List<SkillResultEntry> skillResults) {
         this.skillResults = skillResults;
+    }
+
+    public MyIntention getMyIntention() {
+        return myIntention;
+    }
+
+    public void setMyIntention(MyIntention myIntention) {
+        this.myIntention = myIntention;
+    }
+
+    public InterlocutorState getInterlocutorState() {
+        return interlocutorState;
+    }
+
+    public void setInterlocutorState(InterlocutorState interlocutorState) {
+        this.interlocutorState = interlocutorState;
     }
 }

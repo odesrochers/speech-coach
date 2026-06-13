@@ -14,6 +14,12 @@ public class Session {
     @Column(nullable = false)
     private SessionType type;
 
+    @Enumerated(EnumType.STRING)
+    private MyIntention myIntention;
+
+    @Enumerated(EnumType.STRING)
+    private InterlocutorState interlocutorState;
+
     @Column(nullable = false)
     private LocalDate date;
 
@@ -46,6 +52,22 @@ public class Session {
 
     public void setType(SessionType type) {
         this.type = type;
+    }
+
+    public MyIntention getMyIntention() {
+        return myIntention;
+    }
+
+    public void setMyIntention(MyIntention myIntention) {
+        this.myIntention = myIntention;
+    }
+
+    public InterlocutorState getInterlocutorState() {
+        return interlocutorState;
+    }
+
+    public void setInterlocutorState(InterlocutorState interlocutorState) {
+        this.interlocutorState = interlocutorState;
     }
 
     public LocalDate getDate() {
@@ -99,10 +121,13 @@ public class Session {
     public Session() {
     }
 
-    public Session(SessionType type, LocalDate date, Integer successRating, String notes) {
+    public Session(SessionType type, LocalDate date, Integer successRating, String notes, MyIntention myIntention,
+            InterlocutorState interlocutorState) {
         this.type = type;
         this.date = date;
         this.successRating = successRating;
         this.notes = notes;
+        this.myIntention = myIntention;
+        this.interlocutorState = interlocutorState;
     }
 }
