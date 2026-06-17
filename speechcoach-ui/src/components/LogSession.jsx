@@ -10,6 +10,7 @@ function LogSession({ onSessionLogged }) {
   const [skillSelections, setSkillSelections] = useState({});
   const [myIntention, setMyIntention] = useState(null);
   const [interlocutorState, setInterlocutorState] = useState(null);
+
   const intentionOptions = [
     "INFORM",
     "CLARIFY",
@@ -34,6 +35,15 @@ function LogSession({ onSessionLogged }) {
     "CONFUSED",
     "UNINTERESTED",
   ];
+  const typeOptions = [
+    { value: "CALL", label: "Call" },
+    { value: "MEETING", label: "Meeting" },
+    { value: "PRESENTATION", label: "Presentation" },
+    { value: "REGULAR_CONVERSATION", label: "Regular conversation" },
+    { value: "CRUCIAL_CONVERSATION", label: "Crucial conversation" },
+    { value: "INTERVIEW", label: "Interview" },
+    { value: "OTHER", label: "Other" },
+  ];
 
   useEffect(() => {
     fetch("http://localhost:8080/api/skills")
@@ -52,23 +62,22 @@ function LogSession({ onSessionLogged }) {
     });
   }
 
-  function getSkillLabel(skillId) {
-    const state = skillSelections[skillId];
-    if (!state) return null;
-    return state === "USED_WELL" ? "✓" : "✗";
-  }
-
   function toggleSelection(value, current, setter) {
     setter(current === value ? null : value);
+  }
+
+  function formatLabel(option) {
+    return option
+      .toLowerCase()
+      .split("_")
+      .map((w) => w[0].toUpperCase() + w.slice(1))
+      .join(" ");
   }
 
   async function handleSubmit() {
     setLoading(true);
     const skillResults = Object.entries(skillSelections).map(
-      ([skillId, result]) => ({
-        skillId: Number(skillId),
-        result,
-      }),
+      ([skillId, result]) => ({ skillId: Number(skillId), result }),
     );
 
     const response = await fetch("http://localhost:8080/api/sessions", {
@@ -86,114 +95,199 @@ function LogSession({ onSessionLogged }) {
     });
     const data = await response.json();
     setLoading(false);
-    console.log(data);
     onSessionLogged(data);
   }
 
+  const ratingLabels = ["Rough", "Below par", "Okay", "Good", "Excellent"];
+
   return (
-    <div>
-      <h1>Log a Session</h1>
+    <div className="min-h-screen bg-stone-950 py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        <header className="mb-8">
+          <p className="text-xs font-semibold tracking-widest text-teal-400 uppercase mb-1">
+            Speech Coach
+          </p>
+          <h1 className="text-3xl font-serif text-stone-100">Log a session</h1>
+          <p className="text-stone-400 text-sm mt-1">
+            Capture how it went while it's still fresh.
+          </p>
+        </header>
 
-      <div>
-        <label>Type</label>
-        <select value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="CALL">Call</option>
-          <option value="MEETING">Meeting</option>
-          <option value="PRESENTATION">Presentation</option>
-          <option value="REGULAR_CONVERSATION">Regular Conversation</option>
-          <option value="CRUCIAL_CONVERSATION">Crucial Conversation</option>
-          <option value="INTERVIEW">Interview</option>
-          <option value="OTHER">Other</option>
-        </select>
-      </div>
+        <div className="bg-stone-900 rounded-2xl shadow-sm border border-stone-800 divide-y divide-stone-800">
+          {/* Basics */}
+          <section className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-medium text-stone-300 mb-1.5">
+                Type
+              </label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-stone-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              >
+                {typeOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      <div>
-        <label>Date</label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-      </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-300 mb-1.5">
+                Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-stone-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              />
+            </div>
+          </section>
 
-      <div>
-        <label>Success Rating (1-5)</label>
-        <input
-          type="number"
-          min="1"
-          max="5"
-          value={successRating}
-          onChange={(e) => setSuccessRating(Number(e.target.value))}
-        />
-      </div>
+          {/* Success rating */}
+          <section className="p-6">
+            <label className="block text-sm font-medium text-stone-300 mb-3">
+              How did it go?
+            </label>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setSuccessRating(n)}
+                  className={`flex-1 rounded-lg py-2.5 text-sm font-medium border transition-colors ${
+                    successRating === n
+                      ? "bg-teal-600 text-white border-teal-600"
+                      : "bg-stone-800 text-stone-300 border-stone-700 hover:border-teal-500"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-stone-500 mt-2">
+              {ratingLabels[successRating - 1]}
+            </p>
+          </section>
 
-      <div>
-        <label>Notes</label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows="4"
-        />
-      </div>
+          {/* Notes */}
+          <section className="p-6">
+            <label className="block text-sm font-medium text-stone-300 mb-1.5">
+              Notes
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows="4"
+              placeholder="What happened? What would you change next time?"
+              className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-stone-100 placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+            />
+          </section>
 
-      <div>
-        <label>Skills</label>
-        <div>
-          {skills.map((skill) => (
+          {/* Skills */}
+          <section className="p-6">
+            <label className="block text-sm font-medium text-stone-300 mb-1">
+              Skills practiced
+            </label>
+            <p className="text-xs text-stone-500 mb-3">
+              Tap once for used well, twice for struggled, again to clear.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {skills.map((skill) => {
+                const state = skillSelections[skill.id];
+                const styles =
+                  state === "USED_WELL"
+                    ? "bg-emerald-950 text-emerald-300 border-emerald-700"
+                    : state === "STRUGGLED"
+                      ? "bg-rose-950 text-rose-300 border-rose-700"
+                      : "bg-stone-800 text-stone-300 border-stone-700 hover:border-teal-500";
+                return (
+                  <button
+                    key={skill.id}
+                    type="button"
+                    onClick={() => cycleSkill(skill.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${styles}`}
+                  >
+                    {skill.name}
+                    {state === "USED_WELL" && <span>✓</span>}
+                    {state === "STRUGGLED" && <span>✗</span>}
+                  </button>
+                );
+              })}
+              {skills.length === 0 && (
+                <p className="text-sm text-stone-500">No skills set up yet.</p>
+              )}
+            </div>
+          </section>
+
+          {/* Intention */}
+          <section className="p-6">
+            <label className="block text-sm font-medium text-stone-300 mb-3">
+              Your intention going in
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {intentionOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    toggleSelection(option, myIntention, setMyIntention)
+                  }
+                  className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                    myIntention === option
+                      ? "bg-teal-600 text-white border-teal-600"
+                      : "bg-stone-800 text-stone-300 border-stone-700 hover:border-teal-500"
+                  }`}
+                >
+                  {formatLabel(option)}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Interlocutor state */}
+          <section className="p-6">
+            <label className="block text-sm font-medium text-stone-300 mb-3">
+              The other person's state
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {stateOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    toggleSelection(
+                      option,
+                      interlocutorState,
+                      setInterlocutorState,
+                    )
+                  }
+                  className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                    interlocutorState === option
+                      ? "bg-amber-600 text-white border-amber-600"
+                      : "bg-stone-800 text-stone-300 border-stone-700 hover:border-amber-500"
+                  }`}
+                >
+                  {formatLabel(option)}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Submit */}
+          <section className="p-6">
             <button
-              key={skill.id}
-              onClick={() => cycleSkill(skill.id)}
-              style={{ margin: "4px" }}
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full rounded-lg bg-teal-600 text-white font-medium py-3 hover:bg-teal-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
-              {skill.name} {getSkillLabel(skill.id)}
+              {loading ? "Analyzing…" : "Log session"}
             </button>
-          ))}
+          </section>
         </div>
       </div>
-
-      <div>
-        <label>My Intention</label>
-        <div>
-          {intentionOptions.map((option) => (
-            <button
-              key={option}
-              onClick={() =>
-                toggleSelection(option, myIntention, setMyIntention)
-              }
-              style={{
-                margin: "4px",
-                fontWeight: myIntention === option ? "bold" : "normal",
-              }}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label>Interlocutor State</label>
-        <div>
-          {stateOptions.map((option) => (
-            <button
-              key={option}
-              onClick={() =>
-                toggleSelection(option, interlocutorState, setInterlocutorState)
-              }
-              style={{
-                margin: "4px",
-                fontWeight: interlocutorState === option ? "bold" : "normal",
-              }}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <button onClick={handleSubmit} disabled={loading}>
-        {loading ? "Analyzing..." : "Log Session"}
-      </button>
     </div>
   );
 }
